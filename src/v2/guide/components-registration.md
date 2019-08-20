@@ -6,6 +6,8 @@ order: 101
 
 > 该页面假设你已经阅读过了[组件基础](components.html)。如果你还对组件不太了解，推荐你先阅读它。
 
+<div class="vueschool"><a href="https://vueschool.io/lessons/global-vs-local-components?friend=vuejs" target="_blank" rel="noopener" title="Free Vue.js Component Registration lesson">Watch a free video lesson on Vue School</a></div>
+
 ## 组件名
 
 在注册一个组件的时候，我们始终需要给它一个名字。比如在全局注册的时候我们已经看到了：
@@ -38,7 +40,7 @@ Vue.component('my-component-name', { /* ... */ })
 Vue.component('MyComponentName', { /* ... */ })
 ```
 
-当使用 PascalCase (驼峰式命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 `<my-component-name>` 和 `<MyComponentName>` 都是可接受的。注意，尽管如此，直接在 DOM (即非字符串的模板) 中使用时只有 kebab-case 是有效的。
+当使用 PascalCase (首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 `<my-component-name>` 和 `<MyComponentName>` 都是可接受的。注意，尽管如此，直接在 DOM (即非字符串的模板) 中使用时只有 kebab-case 是有效的。
 
 ## 全局注册
 
@@ -207,8 +209,11 @@ requireComponent.keys().forEach(fileName => {
   // 获取组件的 PascalCase 命名
   const componentName = upperFirst(
     camelCase(
-      // 剥去文件名开头的 `./` 和结尾的扩展名
-      fileName.replace(/^\.\/(.*)\.\w+$/, '$1')
+      // 获取和目录深度无关的文件名
+      fileName
+        .split('/')
+        .pop()
+        .replace(/\.\w+$/, '')
     )
   )
 

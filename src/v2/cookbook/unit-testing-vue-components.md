@@ -45,8 +45,9 @@ export default {
 
 ```js
 import { shallowMount } from '@vue/test-utils'
+import Hello from './Hello.vue'
 
-test('Foo', () => {
+test('Hello', () => {
   // 渲染这个组件
   const wrapper = shallowMount(Hello)
 
@@ -144,6 +145,7 @@ export default {
 
 ```js
 import { shallowMount } from '@vue/test-utils'
+import Foo from './Foo.vue'
 
 describe('Foo', () => {
   it('renders a message and responds correctly to user input', () => {
@@ -187,7 +189,11 @@ import Foo from './Foo'
 
 const factory = (values = {}) => {
   return shallowMount(Foo, {
-    data: { ...values  }
+    data () {
+      return {
+        ...values
+      }
+    }
   })
 }
 

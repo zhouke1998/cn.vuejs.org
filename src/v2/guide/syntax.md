@@ -46,9 +46,9 @@ Mustache 标签将会被替代为对应数据对象上 `msg` 属性的值。无�
 new Vue({
   el: '#example1',
   data: function () {
-   return {
-     rawHtml: '<span style="color: red">This should be red.</span>'
-   }
+    return {
+      rawHtml: '<span style="color: red">This should be red.</span>'
+    }
   }
 })
 </script>
@@ -66,7 +66,7 @@ Mustache 语法不能作用在 HTML 特性上，遇到这种情况应该使用 [
 <div v-bind:id="dynamicId"></div>
 ```
 
-在布尔特性的情况下，它们的存在即暗示为 `true`，`v-bind` 工作起来略有不同，在这个例子中：
+对于布尔特性 (它们只要存在就意味着值为 `true`)，`v-bind` 工作起来略有不同，在这个例子中：
 
 ``` html
 <button v-bind:disabled="isButtonDisabled">Button</button>
@@ -128,9 +128,53 @@ Mustache 语法不能作用在 HTML 特性上，遇到这种情况应该使用 [
 
 在这里参数是监听的事件名。我们也会更详细地讨论事件处理。
 
+### 动态参数
+
+> 2.6.0 新增
+
+从 2.6.0 开始，可以用方括号括起来的 JavaScript 表达式作为一个指令的参数：
+
+``` html
+<a v-bind:[attributeName]="url"> ... </a>
+```
+
+这里的 `attributeName` 会被作为一个 JavaScript 表达式进行动态求值，求得的值将会作为最终的参数来使用。例如，如果你的 Vue 实例有一个 `data` 属性 `attributeName`，其值为 `"href"`，那么这个绑定将等价于 `v-bind:href`。
+
+同样地，你可以使用动态参数为一个动态的事件名绑定处理函数：
+
+``` html
+<a v-on:[eventName]="doSomething"> ... </a>
+```
+
+同样地，当 `eventName` 的值为 `"focus"` 时，`v-on:[eventName]` 将等价于 `v-on:focus`。
+
+#### 对动态参数的值的约束
+
+动态参数预期会求出一个字符串，异常情况下值为 `null`。这个特殊的 `null` 值可以被显性地用于移除绑定。任何其它非字符串类型的值都将会触发一个警告。
+
+#### 对动态参数表达式的约束
+
+<p class="tip">动态参数表达式有一些语法约束，因为某些字符，例如空格和引号，放在 HTML 特性名里是无效的。同样，在 DOM 中使用模板时你需要回避大写键名。</p>
+
+例如，下面的代码是无效的：
+
+``` html
+<!-- 这会触发一个编译警告 -->
+<a v-bind:['foo' + bar]="value"> ... </a>
+```
+
+变通的办法是使用没有空格或引号的表达式，或用计算属性替代这种复杂表达式。
+
+另外，如果你在 DOM 中使用模板 (直接在一个 HTML 文件里撰写模板)，需要留意浏览器会把特性名全部强制转为小写：
+
+``` html
+<!-- 在 DOM 中使用模板时这段代码会被转换为 `v-bind:[someattr]` -->
+<a v-bind:[someAttr]="value"> ... </a>
+```
+
 ### 修饰符
 
-修饰符 (Modifiers) 是以半角句号 `.` 指明的特殊后缀，用于指出一个指令应该以特殊方式绑定。例如，`.prevent` 修饰符告诉 `v-on` 指令对于触发的事件调用 `event.preventDefault()`：
+修饰符 (modifier) 是以半角句号 `.` 指明的特殊后缀，用于指出一个指令应该以特殊方式绑定。例如，`.prevent` 修饰符告诉 `v-on` 指令对于触发的事件调用 `event.preventDefault()`：
 
 ``` html
 <form v-on:submit.prevent="onSubmit">...</form>
@@ -140,7 +184,7 @@ Mustache 语法不能作用在 HTML 特性上，遇到这种情况应该使用 [
 
 ## 缩写
 
-`v-` 前缀作为一种视觉提示，用来识别模板中 Vue 特定的特性。当你在使用 Vue.js 为现有标签添加动态行为 (dynamic behavior) 时，`v-` 前缀很有帮助，然而，对于一些频繁用到的指令来说，就会感到使用繁琐。同时，在构建由 Vue.js 管理所有模板的[单页面应用程序 (SPA - single page application)](https://en.wikipedia.org/wiki/Single-page_application) 时，`v-` 前缀也变得没那么重要了。因此，Vue.js 为 `v-bind` 和 `v-on` 这两个最常用的指令，提供了特定简写：
+`v-` 前缀作为一种视觉提示，用来识别模板中 Vue 特定的特性。当你在使用 Vue.js 为现有标签添加动态行为 (dynamic behavior) 时，`v-` 前缀很有帮助，然而，对于一些频繁用到的指令来说，就会感到使用繁琐。同时，在构建由 Vue 管理所有模板的[单页面应用程序 (SPA - single page application)](https://en.wikipedia.org/wiki/Single-page_application) 时，`v-` 前缀也变得没那么重要了。因此，Vue 为 `v-bind` 和 `v-on` 这两个最常用的指令，提供了特定简写：
 
 ### `v-bind` 缩写
 
@@ -152,6 +196,9 @@ Mustache 语法不能作用在 HTML 特性上，遇到这种情况应该使用 [
 <a :href="url">...</a>
 ```
 
+<!-- 动态参数的缩写 (2.6.0+) -->
+<a :[key]="url"> ... </a>
+
 ### `v-on` 缩写
 
 ``` html
@@ -162,4 +209,7 @@ Mustache 语法不能作用在 HTML 特性上，遇到这种情况应该使用 [
 <a @click="doSomething">...</a>
 ```
 
-它们看起来可能与普通的 HTML 略有不同，但 `:` 与 `@` 对于特性名来说都是合法字符，在所有支持 Vue.js 的浏览器都能被正确地解析。而且，它们不会出现在最终渲染的标记中。缩写语法是完全可选的，但随着你更深入地了解它们的作用，你会庆幸拥有它们。
+<!-- 动态参数的缩写 (2.6.0+) -->
+<a @[event]="doSomething"> ... </a>
+
+它们看起来可能与普通的 HTML 略有不同，但 `:` 与 `@` 对于特性名来说都是合法字符，在所有支持 Vue 的浏览器都能被正确地解析。而且，它们不会出现在最终渲染的标记中。缩写语法是完全可选的，但随着你更深入地了解它们的作用，你会庆幸拥有它们。

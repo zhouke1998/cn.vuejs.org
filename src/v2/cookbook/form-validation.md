@@ -6,6 +6,8 @@ order: 3
 
 ## 基本的示例
 
+<div class="vueschool"><a href="https://vueschool.io/lessons/vuejs-form-validation-diy?friend=vuejs" target="_blank" rel="noopener" title="Free Vue.js Form Validation Lesson">Watch a free lesson on Vue School</a></div>
+
 表单校验是浏览器原生支持的，但是有的时候用不同的浏览器处理起来需要一些小技巧。即使当表单校验已经被完美支持，你也还是有很多时候需要进行自定义的校验。这时一个更加手动的基于 Vue 的解决方案可能会更适合。我们来看一个简单的示例。
 
 给定一个表单，包含三个字段，其中两个是必填项。我们先来看看 HTML：
@@ -42,7 +44,8 @@ order: 3
       v-model="age"
       type="number"
       name="age"
-      min="0">
+      min="0"
+    >
   </p>
 
   <p>
@@ -65,7 +68,7 @@ order: 3
 </form>
 ```
 
-我们从头到尾看一遍，这个 `<form>` 标记上有一个我们将会用在 Vue 组件上的 ID。这里有一个你稍后会看到的 `submit` 处理函数，而这里的 `action` 是一个可能指向了某个真实服务器的临时 URL (当然你在服务端也要是有校验的)。
+我们从头到尾看一遍，这个 `<form>` 标记上有一个我们将会用在 Vue 组件上的 ID。这里有一个你稍后会看到的 `submit` 处理函数，而这里的 `action` 是一个可能指向了某个真实服务器的临时 URL (当然你在服务端也是要有校验的)。
 
 下面有一段内容，会根据错误状态进行显示或隐藏。它将会在表单的最顶端渲染一个简单的错误列表。同时要注意我们会在提交的时候进行校验，而不是每个字段被修改的时候。
 
@@ -169,7 +172,7 @@ const app = new Vue({
 </form>
 ```
 
-尽管这里的不同点很小，注意顶端的 `novalidate="true"`。但是这很重要，因为浏览器会尝试在 `type="email"` 的字端校验邮件地址。坦白说在这个案例中浏览器的校验规则是值得信任的，不过我们想要创建一个自定义校验的例子，所以把它禁用了。以下是更新后的 JavaScript。
+尽管这里的不同点很小，注意顶端的 `novalidate="true"`。但是这很重要，因为浏览器会尝试在 `type="email"` 的字段校验邮件地址。坦白说在这个案例中浏览器的校验规则是值得信任的，不过我们想要创建一个自定义校验的例子，所以把它禁用了。以下是更新后的 JavaScript。
 
 ``` js
 const app = new Vue({

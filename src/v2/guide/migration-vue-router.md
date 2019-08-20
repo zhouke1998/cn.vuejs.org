@@ -74,7 +74,7 @@ var router = new VueRouter({
 })
 ```
 
-考虑到不同浏览器中遍历对象不能保证会使用相同的键值，这种数组的语法可以保证更多可预测的路由匹配。
+考虑到不同浏览器中遍历对象不能保证会使用相同的 property 顺序，这种数组的语法可以保证更多可预测的路由匹配。
 
 {% raw %}
 <div class="upgrade-path">
@@ -212,9 +212,9 @@ router.alias({
 
 如果你需要进行多次 alias 操作，你也可以使用一个数组语法去实现：
 
-``` js
+{% codeblock lang:js %}
 alias: ['/manage', '/administer', '/administrate']
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -488,7 +488,7 @@ scrollBehavior: function (to, from, savedPosition) {
 {% raw %}
 <div class="upgrade-path">
   <h4>升级路径</h4>
-  <p>运行 <a href="https://github.com/vuejs/vue-migration-helper">迁移路径</a> 找到 <code>beforeRouteEnter</code> 钩子的示例。</p>
+  <p>运行 <a href="https://github.com/vuejs/vue-migration-helper">迁移路径</a> 找到 <code>activate</code> 钩子的示例。</p>
 </div>
 {% endraw %}
 

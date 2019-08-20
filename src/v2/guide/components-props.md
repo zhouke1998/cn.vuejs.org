@@ -41,7 +41,9 @@ props: {
   likes: Number,
   isPublished: Boolean,
   commentIds: Array,
-  author: Object
+  author: Object,
+  callback: Function,
+  contactsPromise: Promise // or any other constructor
 }
 ```
 
@@ -62,7 +64,9 @@ props: {
 <blog-post v-bind:title="post.title"></blog-post>
 
 <!-- 动态赋予一个复杂表达式的值 -->
-<blog-post v-bind:title="post.title + ' by ' + post.author.name"></blog-post>
+<blog-post
+  v-bind:title="post.title + ' by ' + post.author.name"
+></blog-post>
 ```
 
 在上述两个示例中，我们传入的值都是字符串类型的，但实际上*任何*类型的值都可以传给一个 prop。
@@ -108,7 +112,12 @@ props: {
 ```html
 <!-- 即便对象是静态的，我们仍然需要 `v-bind` 来告诉 Vue -->
 <!-- 这是一个 JavaScript 表达式而不是一个字符串。-->
-<blog-post v-bind:author="{ name: 'Veronica', company: 'Veridian Dynamics' }"></blog-post>
+<blog-post
+  v-bind:author="{
+    name: 'Veronica',
+    company: 'Veridian Dynamics'
+  }"
+></blog-post>
 
 <!-- 用一个变量进行动态赋值。-->
 <blog-post v-bind:author="post.author"></blog-post>
@@ -181,7 +190,7 @@ post: {
 ``` js
 Vue.component('my-component', {
   props: {
-    // 基础的类型检查 (`null` 匹配任何类型)
+    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
     propA: Number,
     // 多个可能的类型
     propB: [String, Number],
@@ -305,7 +314,7 @@ Vue.component('my-component', {
 
 ```js
 {
-  class: 'username-input',
+  required: true,
   placeholder: 'Enter your username'
 }
 ```
@@ -329,12 +338,14 @@ Vue.component('base-input', {
 })
 ```
 
+<p class="tip">注意 `inheritAttrs: false` 选项**不会**影响 `style` 和 `class` 的绑定。</p>
+
 这个模式允许你在使用基础组件的时候更像是使用原始的 HTML 元素，而不会担心哪个元素是真正的根元素：
 
 ```html
 <base-input
   v-model="username"
-  class="username-input"
+  required
   placeholder="Enter your username"
 ></base-input>
 ```

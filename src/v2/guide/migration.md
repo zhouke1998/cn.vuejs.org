@@ -186,7 +186,7 @@ mounted: function () {
 
 ### `v-for` 遍历对象时的参数顺序 <sup>变更</sup>
 
-当包含 `key` 时，之前遍历对象的参数顺序是 `(key, value)`。现在是 `(value, key)`，来和常见的对象迭代器 (例如 lodash) 保持一致。
+当包含 property 名称/key 时，之前遍历对象的参数顺序是 `(name, value)`。现在是 `(value, name)`，来和常见的对象迭代器 (例如 lodash) 保持一致。
 
 {% raw %}
 <div class="upgrade-path">
@@ -209,15 +209,15 @@ mounted: function () {
 
 `track-by` 已经替换为 `key`，它的工作方式与其他属性一样，没有 `v-bind` 或者 `:` 前缀，它会被作为一个字符串处理。多数情况下，你需要使用具有完整表达式的动态绑定 (dynamic binding) 来替换静态的 key。例如，替换：
 
-``` html
+{% codeblock lang:html %}
 <div v-for="item in items" track-by="id">
-```
+{% endcodeblock %}
 
 你现在应该写为：
 
-``` html
+{% codeblock lang:html %}
 <div v-for="item in items" v-bind:key="item.id">
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -287,8 +287,8 @@ computed: {
 
 Props 现在只能单向传递。为了对父组件产生反向影响，子组件需要显式地传递一个事件而不是依赖于隐式地双向绑定。详见：
 
-- [自定义组件事件](components.html#自定义事件)
-- [自定义输入组件](components.html#使用自定义事件的表单输入组件) (使用组件事件)
+- [自定义组件事件](components.html#监听子组件事件)
+- [自定义输入组件](components-custom-events.html#将原生事件绑定到组件) (使用组件事件)
 - [全局状态管理](state-management.html)
 
 {% raw %}
@@ -302,8 +302,8 @@ Props 现在只能单向传递。为了对父组件产生反向影响，子组�
 
 Props 现在只能单向传递。为了对父组件产生反向影响，子组件需要显式地传递一个事件而不是依赖于隐式地双向绑定。详见：
 
-- [自定义组件事件](components.html#自定义事件)
-- [自定义输入组件](components.html#使用自定义事件的表单输入组件) (使用组件事件)
+- [自定义组件事件](components.html#监听子组件事件)
+- [自定义输入组件](components-custom-events.html#将原生事件绑定到组件) (使用组件事件)
 - [全局状态管理](state-management.html)
 
 {% raw %}
@@ -399,9 +399,9 @@ methods: {
 
   现在在组件上使用 `v-on` 只会监听自定义事件 (组件用 `$emit` 触发的事件)。如果要监听根元素的原生事件，可以使用 `.native` 修饰符，比如：
 
-``` html
+{% codeblock lang:html %}
 <my-component v-on:click.native="doSomething"></my-component>
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -600,9 +600,9 @@ strings.map(function (str) {
 
 替代方案是，你可以使用对象数组，这样`v-model` 就可以同步更新对象里面的字段了，例如：
 
-``` html
+{% codeblock lang:html %}
 <input v-for="obj in objects" v-model="obj.str">
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -706,7 +706,7 @@ strings.map(function (str) {
 
 示例，如下更改：
 
-``` js
+``` html
 <p v-my-directive.literal="foo bar baz"></p>
 ```
 
@@ -787,7 +787,7 @@ Vue.config.keyCodes.f1 = 112
 
 对于`$dispatch` 和 `$broadcast`最简单的升级方式就是：通过使用事件中心，允许组件自由交流，无论组件处于组件树的哪一层。由于 Vue 实例实现了一个事件分发接口，你可以通过实例化一个空的 Vue 实例来实现这个目的。
 
-这些方法的最常见用途之一是父子组件的相互通信。在这些情况下，你可以使用 [`v-on`监听子组件上 $emit 的变化](components.html#使用自定义事件的表单输入组件)。这可以允许你很方便的添加事件显性。
+这些方法的最常见用途之一是父子组件的相互通信。在这些情况下，你可以使用 [`v-on`监听子组件上 $emit 的变化](components-custom-events.html#将原生事件绑定到组件)。这可以允许你很方便的添加事件显性。
 
 然而，如果是跨多层父子组件通信的话，`$emit` 并没有什么用。相反，用集中式的事件中间件可以做到简单的升级。这会让组件之间的通信非常顺利，即使是兄弟组件。因为 Vue 通过事件发射器接口执行实例，实际上你可以使用一个空的 Vue 实例。
 
@@ -989,9 +989,9 @@ computed: {
 
 甚至可以字段排序：
 
-``` js
+{% codeblock lang:js %}
 _.orderBy(this.users, ['name', 'last_login'], ['asc', 'desc'])
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -1069,9 +1069,9 @@ function pluralizeKnife (count) {
 
 对于简单的问题，可以这样做：
 
-``` js
+{% codeblock lang:js %}
 '$' + price.toFixed(2)
-```
+{% endcodeblock %}
 
 大多数情况下，仍然会有奇怪的现象 (比如 `0.035.toFixed(2)` 向上取舍得到 `0.04`，但是 `0.045` 向下取舍却也得到 `0.04`)。解决这些问题可以使用 [`accounting`](https://openexchangerates.github.io/accounting.js/) 库来实现更多可靠的货币格式化。
 
@@ -1364,9 +1364,9 @@ methods: {
 
 使用 DOM 原生方法：
 
-``` js
+{% codeblock lang:js %}
 myElement.appendChild(vm.$el)
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -1379,9 +1379,9 @@ myElement.appendChild(vm.$el)
 
 使用 DOM 原生方法：
 
-``` js
+{% codeblock lang:js %}
 myElement.parentNode.insertBefore(vm.$el, myElement)
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -1394,15 +1394,15 @@ myElement.parentNode.insertBefore(vm.$el, myElement)
 
 使用 DOM 原生方法：
 
-``` js
+{% codeblock lang:js %}
 myElement.parentNode.insertBefore(vm.$el, myElement.nextSibling)
-```
+{% endcodeblock %}
 
 如果 `myElement` 是最后一个节点也可以这样写：
 
-``` js
+{% codeblock lang:js %}
 myElement.parentNode.appendChild(vm.$el)
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">
@@ -1415,9 +1415,9 @@ myElement.parentNode.appendChild(vm.$el)
 
 使用 DOM 原生方法：
 
-``` js
+{% codeblock lang:js %}
 vm.$el.remove()
-```
+{% endcodeblock %}
 
 {% raw %}
 <div class="upgrade-path">

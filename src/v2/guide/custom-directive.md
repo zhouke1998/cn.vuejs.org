@@ -6,6 +6,8 @@ order: 302
 
 ## 简介
 
+<div class="vueschool"><a href="https://vueschool.io/lessons/create-vuejs-directive?friend=vuejs" target="_blank" rel="noopener" title="Free Vue.js Custom Directives lesson">Watch a free video lesson on Vue School</a></div>
+
 除了核心功能默认内置的指令 (`v-model` 和 `v-show`)，Vue 也允许注册自定义指令。注意，在 Vue2.0 中，代码复用和抽象的主要形式是组件。然而，有的情况下，你仍然需要对普通 DOM 元素进行底层操作，这时候就会用到自定义指令。举个聚焦输入框的例子，如下：
 
 {% raw %}
@@ -65,6 +67,8 @@ directives: {
 - `inserted`：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
 
 - `update`：所在组件的 VNode 更新时调用，**但是可能发生在其子 VNode 更新之前**。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新 (详细的钩子函数参数见下)。
+
+<p class="tip">我们会在[稍后](./render-function.html#虚拟-DOM)讨论[渲染函数](./render-function.html)时介绍更多 VNodes 的细节。</p>
 
 - `componentUpdated`：指令所在组件的 VNode **及其子 VNode** 全部更新后调用。
 
@@ -140,6 +144,71 @@ new Vue({
 })
 </script>
 {% endraw %}
+
+### 动态指令参数
+
+指令的参数可以是动态的。例如，在 `v-mydirective:[argument]="value"` 中，`argument` 参数可以根据组件实例数据进行更新！这使得自定义指令可以在应用中被灵活使用。
+
+例如你想要创建一个自定义指令，用来通过固定布局将元素固定在页面上。我们可以像这样创建一个通过指令值来更新竖直位置像素值的自定义指令：
+
+```html
+<div id="baseexample">
+  <p>Scroll down the page</p>
+  <p v-pin="200">Stick me 200px from the top of the page</p>
+</div>
+```
+
+```js
+Vue.directive('pin', {
+  bind: function (el, binding, vnode) {
+    el.style.position = 'fixed'
+    el.style.top = binding.value + 'px'
+  }
+})
+
+new Vue({
+  el: '#baseexample'
+})
+```
+
+这会把该元素固定在距离页面顶部 200 像素的位置。但如果场景是我们需要把元素固定在左侧而不是顶部又该怎么办呢？这时使用动态参数就可以非常方便地根据每个组件实例来进行更新。
+
+```html
+<div id="dynamicexample">
+  <h3>Scroll down inside this section ↓</h3>
+  <p v-pin:[direction]="200">I am pinned onto the page at 200px to the left.</p>
+</div>
+```
+
+```js
+Vue.directive('pin', {
+  bind: function (el, binding, vnode) {
+    el.style.position = 'fixed'
+    var s = (binding.arg == 'left' ? 'left' : 'top')
+    el.style[s] = binding.value + 'px'
+  }
+})
+
+new Vue({
+  el: '#dynamicexample',
+  data: function () {
+    return {
+      direction: 'left'
+    }
+  }
+})
+```
+
+结果：
+
+{% raw %}
+<iframe height="200" style="width: 100%;" class="demo" scrolling="no" title="Dynamic Directive Arguments" src="//codepen.io/team/Vue/embed/rgLLzb/?height=300&theme-id=32763&default-tab=result" frameborder="no" allowtransparency="true" allowfullscreen="true">
+  查看 <a href='https://codepen.io'>CodePen</a> 上 Vue
+  (<a href='https://codepen.io/Vue'>@Vue</a>) 的例子 <a href='https://codepen.io/team/Vue/pen/rgLLzb/'>Dynamic Directive Arguments</a>.
+</iframe>
+{% endraw %}
+
+这样这个自定义指令现在的灵活性就足以支持一些不同的用例了。
 
 ## 函数简写
 

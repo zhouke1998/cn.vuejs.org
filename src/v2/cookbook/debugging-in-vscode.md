@@ -6,7 +6,7 @@ order: 8
 
 每个应用，不论大小，都需要理解程序是如何运行失败的。在本案例中，我们会探索一些 VS Code 用户在浏览器中调试应用的工作流程。
 
-这个案例展示了在如何在 VS Code 中调试浏览器中运行的通过 [Vue CLI](https://github.com/vuejs/vue-cli) 生成的 Vue.js 应用程序。
+这个案例展示了如何在 VS Code 中调试浏览器中运行的通过 [Vue CLI](https://github.com/vuejs/vue-cli) 生成的 Vue.js 应用程序。
 
 <p class="tip">注意：这个案例覆盖了 Chrome 和 Firefox。如果你知道如何在其它浏览器中进行 VS Code 调试，欢迎分享你的观点 (请看页面底部)。</p>
 
@@ -45,6 +45,9 @@ module.exports = {
 
 ### 从 VS Code 启动应用
 
+<!-- todo: translation -->
+<p class="tip">We're assuming the port to be `8080` here. If it's not the case (for instance, if `8080` has been taken and Vue CLI automatically picks another port for you), just modify the configuration accordingly.</p>
+
 点击在 Activity Bar 里的 Debugger 图标来到 Debug 视图，然后点击那个齿轮图标来配置一个 `launch.json` 的文件，选择 **Chrome/Firefox: Launch** 环境。然后将生成的 `launch.json` 的内容替换成为相应的配置：
 
 ![添加 Chrome 配置](/images/config_add.png)
@@ -61,7 +64,7 @@ module.exports = {
       "webRoot": "${workspaceFolder}/src",
       "breakOnLoad": true,
       "sourceMapPathOverrides": {
-        "webpack:///src/*": "${webRoot}/*"
+        "webpack:///./src/*": "${webRoot}/*"
       }
     },
     {
@@ -85,7 +88,7 @@ module.exports = {
 2. 在根目录打开你惯用的终端并使用 Vue CLI 开启这个应用：
 
   ```
-  npm start
+  npm run serve
   ```
 
 3. 来到 Debug 视图，选择 **'vuejs: chrome/firefox'** 配置，然后按 <kbd>F5</kbd> 或点击那个绿色的 play 按钮。
@@ -103,16 +106,6 @@ module.exports = {
 ![Devtools Timetravel Debugger](/images/devtools-timetravel.gif)
 
 <p class="tip">请留意如果页面使用了一个生产环境/压缩后的 Vue.js 构建版本 (例如来自一个 CDN 的标准的链接)，devtools 的审查功能是默认被禁用的，所以 Vue 面板不会出现。如果你切换到一个非压缩版本，你可能需要强制刷新该页面来看到它。</p>
-
-### Vuetron
-
-[Vuetron](http://vuetron.io/) 是一个非常好的项目，它对 vue-devtools 的工作做了一些扩展。除了普通的 devtools 工作流程，你还可以：
-
-* 快速查阅 API 请求/响应：如果你使用 fetch API 来发送请求，那么这个功能会将所有发出的请求都展示出来。这个扩展出来的卡片展示了请求的数据和响应的数据。
-* 订阅你的应用的某个具体部分的状态，以便快速调试
-* 组件依赖可视化，且允许你收起/展开某个具体的依赖树视图
-
-![Vuetron 层级结构](/images/vuetron-hierarchy.gif)
 
 ### 简单的 debugger 语句
 

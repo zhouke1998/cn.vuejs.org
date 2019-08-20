@@ -82,7 +82,9 @@ type: api
 
   > 从 2.2.0 起，这个钩子也会捕获组件生命周期钩子里的错误。同样的，当这个钩子是 `undefined` 时，被捕获的错误会通过 `console.error` 输出而避免应用崩溃。
 
-  > 从 2.4.0 起这个钩子也会捕获 Vue 自定义事件处理函数内部的错误了。
+  > 从 2.4.0 起，这个钩子也会捕获 Vue 自定义事件处理函数内部的错误了。
+
+  > 从 2.6.0 起，这个钩子也会捕获 `v-on` DOM 监听器内部抛出的错误。另外，如果任何被覆盖的钩子或处理函数返回一个 Promise 链 (例如 async 函数)，则来自其 Promise 链的错误也会被处理。
 
   > 错误追踪服务 [Sentry](https://sentry.io) 和 [Bugsnag](https://docs.bugsnag.com/platforms/browsers/vue/) 都通过此选项提供了官方支持。
 
@@ -242,11 +244,13 @@ type: api
 
   > 2.1.0 起新增：如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。请注意 Vue 不自带 Promise 的 polyfill，所以如果你的目标浏览器不原生支持 Promise (IE：你们都看我干嘛)，你得自己提供 polyfill。
 
-### Vue.set( target, key, value )
+- **参考**：[异步更新队列](../guide/reactivity.html#异步更新队列)
+
+### Vue.set( target, propertyName/index, value )
 
 - **参数**：
   - `{Object | Array} target`
-  - `{string | number} key`
+  - `{string | number} propertyName/index`
   - `{any} value`
 
 - **返回值**：设置的值。
@@ -257,11 +261,11 @@ type: api
 
   <p class="tip">注意对象不能是 Vue 实例，或者 Vue 实例的根数据对象。</p>
 
-### Vue.delete( target, key )
+### Vue.delete( target, propertyName/index )
 
 - **参数**：
   - `{Object | Array} target`
-  - `{string | number} key/index`
+  - `{string | number} propertyName/index`
 
   > 仅在 2.2.0+ 版本中支持 Array + index 用法。
 
@@ -272,6 +276,8 @@ type: api
   > 在 2.2.0+ 中同样支持在数组上工作。
 
   <p class="tip">目标对象不能是一个 Vue 实例或 Vue 实例的根数据对象。</p>
+
+- **参考**：[深入响应式原理](../guide/reactivity.html)
 
 ### Vue.directive( id, [definition] )
 
@@ -398,6 +404,35 @@ type: api
 
 - **参考**：[渲染函数](../guide/render-function.html)
 
+### Vue.observable( object )
+
+> 2.6.0 新增
+
+- **参数**：
+  - `{Object} object`
+
+- **用法**：
+
+  让一个对象可响应。Vue 内部会用它来处理 `data` 函数返回的对象。
+
+  返回的对象可以直接用于[渲染函数](../guide/render-function.html)和[计算属性](../guide/computed.html)内，并且会在发生改变时触发相应的更新。也可以作为最小化的跨组件状态存储器，用于简单的场景：
+
+  ``` js
+  const state = Vue.observable({ count: 0 })
+
+  const Demo = {
+    render(h) {
+      return h('button', {
+        on: { click: () => { state.count++ }}
+      }, `count is: ${state.count}`)
+    }
+  }
+  ```
+
+  <p class="tip">在 Vue 2.x 中，被传入的对象会直接被 `Vue.observable` 改变，所以如[这里展示的](../guide/instance.html#数据与方法)，它和被返回的对象是同一个对象。在 Vue 3.x 中，则会返回一个可响应的代理，而对源对象直接进行修改仍然是不可响应的。因此，为了向前兼容，我们推荐始终操作使用 `Vue.observable` 返回的对象，而不是传入源对象。</p>
+
+- **参考**：[深入响应式原理](../guide/reactivity.html)
+
 ### Vue.version
 
 - **细节**：提供字符串形式的 Vue 安装版本号。这对社区的插件和组件来说非常有用，你可以根据不同的版本号采取不同的策略。
@@ -464,13 +499,24 @@ type: api
   data: vm => ({ a: vm.myProp })
   ```
 
+- **参考**：[深入响应式原理](../guide/reactivity.html)
+
 ### props
 
 - **类型**：`Array<string> | Object`
 
 - **详细**：
 
-  props 可以是数组或对象，用于接收来自父组件的数据。props 可以是简单的数组，或者使用对象作为替代，对象允许配置高级选项，如类型检测、自定义校验和设置默认值。
+  props 可以是数组或对象，用于接收来自父组件的数据。props 可以是简单的数组，或者使用对象作为替代，对象允许配置高级选项，如类型检测、自定义验证和设置默认值。
+
+  你可以基于对象的语法使用以下选项：
+    - `type`: 可以是下列原生构造函数中的一种：`String`、`Number`、`Boolean`、`Array`、`Object`、`Date`、`Function`、`Symbol`、任何自定义构造函数、或上述内容组成的数组。会检查一个 prop 是否是给定的类型，否则抛出警告。Prop 类型的[更多信息在此](../guide/components-props.html#Prop-类型)。
+    - `default`: `any`
+    为该 prop 指定一个默认值。如果该 prop 没有被传入，则换做用这个值。对象或数组的默认值必须从一个工厂函数返回。
+    - `required`: `Boolean`
+    定义该 prop 是否是必填项。在非生产环境中，如果这个值为 truthy 且该 prop 没有被传入的，则一个控制台警告将会被抛出。
+    - `validator`: `Function`
+    自定义验证函数会将该 prop 的值作为唯一的参数代入。在非生产环境下，如果该函数返回一个 falsy 的值 (也就是验证失败)，一个控制台警告将会被抛出。你可以在[这里](../guide/components-props.html#Prop-验证)查阅更多 prop 验证的相关信息。
 
 - **示例**：
 
@@ -480,7 +526,7 @@ type: api
     props: ['size', 'myMessage']
   })
 
-  // 对象语法，提供校验
+  // 对象语法，提供验证
   Vue.component('props-demo-advanced', {
     props: {
       // 检测类型
@@ -498,7 +544,7 @@ type: api
   })
   ```
 
-- **参考**：[Props](../guide/components.html#通过-Prop-向子组件传递数据)
+- **参考**：[Props](../guide/components-props.html)
 
 ### propsData
 
@@ -628,19 +674,23 @@ type: api
       },
       // 方法名
       b: 'someMethod',
-      // 深度 watcher
+      // 该回调会在任何被侦听的对象的 property 改变时被调用，不论其被嵌套多深
       c: {
         handler: function (val, oldVal) { /* ... */ },
         deep: true
       },
       // 该回调将会在侦听开始之后被立即调用
       d: {
-        handler: function (val, oldVal) { /* ... */ },
+        handler: 'someMethod',
         immediate: true
       },
       e: [
-        function handle1 (val, oldVal) { /* ... */ },
-        function handle2 (val, oldVal) { /* ... */ }
+        'handle1',
+        function handle2 (val, oldVal) { /* ... */ },
+        {
+          handler: function handle3 (val, oldVal) { /* ... */ },
+          /* ... */
+        }
       ],
       // watch vm.e.f's value: {g: 5}
       'e.f': function (val, oldVal) { /* ... */ }
@@ -657,7 +707,7 @@ type: api
 
 ### el
 
-- **类型**：`string | HTMLElement`
+- **类型**：`string | Element`
 
 - **限制**：只在由 `new` 创建的实例中遵守。
 
@@ -693,7 +743,7 @@ type: api
 
 - **参考**：
   - [生命周期图示](../guide/instance.html#生命周期图示)
-  - [用插槽分发内容](../guide/components.html#使用插槽分发内容)
+  - [通过插槽分发内容](../guide/components.html#通过插槽分发内容)
 
 ### render
 
@@ -844,7 +894,7 @@ type: api
 
 - **参考**：
   - [构建组件 - keep-alive](#keep-alive)
-  - [动态组件 - keep-alive](../guide/components.html#keep-alive)
+  - [动态组件 - keep-alive](../guide/components-dynamic-async.html#在动态组件上使用-keep-alive)
 
 ### deactivated
 
@@ -858,7 +908,7 @@ type: api
 
 - **参考**：
   - [构建组件 - keep-alive](#keep-alive)
-  - [动态组件 - keep-alive](../guide/components.html#keep-alive)
+  - [动态组件 - keep-alive](../guide/components-dynamic-async.html#在动态组件上使用-keep-alive)
 
 ### beforeDestroy
 
@@ -957,6 +1007,7 @@ type: api
 - **详细**：
 
   `mixins` 选项接受一个混入对象的数组。这些混入实例对象可以像正常的实例对象一样包含选项，他们将在 `Vue.extend()` 里最终选择使用相同的选项合并逻辑合并。举例：如果你的混入包含一个钩子而创建组件本身也有一个，两个函数将被调用。
+
   Mixin 钩子按照传入顺序依次调用，并在调用组件自身的钩子之前被调用。
 
 - **示例**：
@@ -1272,7 +1323,7 @@ type: api
 
 ### vm.$el
 
-- **类型**：`HTMLElement`
+- **类型**：`Element`
 
 - **只读**
 
@@ -1337,7 +1388,10 @@ type: api
 
 - **详细**：
 
-  用来访问被[插槽分发](../guide/components.html#使用插槽分发内容)的内容。每个[具名插槽](../guide/components.html#具名插槽) 有其相应的属性 (例如：`slot="foo"` 中的内容将会在 `vm.$slots.foo` 中被找到)。`default` 属性包括了所有没有被包含在具名插槽中的节点。
+  用来访问被[插槽分发](../guide/components.html#通过插槽分发内容)的内容。每个[具名插槽](../guide/components-slots.html#具名插槽) 有其相应的属性 (例如：`v-slot:foo` 中的内容将会在 `vm.$slots.foo` 中被找到)。`default` 属性包括了所有没有被包含在具名插槽中的节点，或 `v-slot:default` 的内容。
+
+  <!-- todo: translation -->
+  **Note:** `v-slot:foo` is supported in v2.6+. For older versions, you can use the [deprecated syntax](../guide/components-slots.html#Deprecated-Syntax).
 
   在使用[渲染函数](../guide/render-function.html)书写一个组件时，访问 `vm.$slots` 最有帮助。
 
@@ -1345,15 +1399,15 @@ type: api
 
   ```html
   <blog-post>
-    <h1 slot="header">
-      About Me
-    </h1>
+    <template v-slot:header>
+      <h1>About Me</h1>
+    </template>
 
     <p>Here's some page content, which will be included in vm.$slots.default, because it's not inside a named slot.</p>
 
-    <p slot="footer">
-      Copyright 2016 Evan You
-    </p>
+    <template v-slot:footer>
+      <p>Copyright 2016 Evan You</p>
+    </template>
 
     <p>If I have some content down here, it will also be included in vm.$slots.default.</p>.
   </blog-post>
@@ -1375,27 +1429,33 @@ type: api
   ```
 
 - **参考**：
-  - [`<slot>` 组件](#slot-1)
-  - [使用插槽分发内容](../guide/components.html#使用插槽分发内容)
+  - [`<slot>` 组件](#slot)
+  - [通过插槽分发内容](../guide/components.html#通过插槽分发内容)
   - [渲染函数 - 插槽](../guide/render-function.html#插槽)
 
 ### vm.$scopedSlots
 
 > 2.1.0 新增
 
-- **类型**：`{ [name: string]: props => VNode | Array<VNode> }`
+- **类型**：`{ [name: string]: props => Array<VNode> | undefined }`
 
 - **只读**
 
 - **详细**：
 
-  用来访问[作用域插槽](../guide/components.html#作用域插槽)。对于包括 `默认 slot` 在内的每一个插槽，该对象都包含一个返回相应 VNode 的函数。
+  用来访问[作用域插槽](../guide/components-slots.html#作用域插槽)。对于包括 `默认 slot` 在内的每一个插槽，该对象都包含一个返回相应 VNode 的函数。
 
   `vm.$scopedSlots` 在使用[渲染函数](../guide/render-function.html)开发一个组件时特别有用。
 
+  **注意**：从 2.6.0 开始，这个属性有两个变化：
+
+  1. 作用域插槽函数现在保证返回一个 VNode 数组，除非在返回值无效的情况下返回 `undefined`。
+
+  2. 所有的 `$slots` 现在都会作为函数暴露在 `$scopedSlots` 中。如果你在使用渲染函数，不论当前插槽是否带有作用域，我们都推荐始终通过 `$scopedSlots` 访问它们。这不仅仅使得在未来添加作用域变得简单，也可以让你最终轻松迁移到所有插槽都是函数的 Vue 3。
+
 - **参考**：
-  - [`<slot>` 组件](#slot-1)
-  - [作用域插槽](../guide/components.html#作用域插槽)
+  - [`<slot>` 组件](#slot)
+  - [作用域插槽](../guide/components-slots.html#作用域插槽)
   - [渲染函数 - 插槽](../guide/render-function.html#插槽)
 
 ### vm.$refs
@@ -1409,7 +1469,7 @@ type: api
   一个对象，持有注册过 [`ref` 特性](#ref) 的所有 DOM 元素和组件实例。
 
 - **参考**：
-  - [子组件引用](../guide/components.html#子组件索引)
+  - [子组件引用](../guide/components-edge-cases.html#访问子组件实例或子元素)
   - [特殊特性 - ref](#ref)
 
 ### vm.$isServer
@@ -1426,6 +1486,8 @@ type: api
 
 ### vm.$attrs
 
+> 2.4.0 新增
+
 - **类型**：`{ [key: string]: string }`
 
 - **只读**
@@ -1435,6 +1497,8 @@ type: api
   包含了父作用域中不作为 prop 被识别 (且获取) 的特性绑定 (`class` 和 `style` 除外)。当一个组件没有声明任何 prop 时，这里会包含所有父作用域的绑定 (`class` 和 `style` 除外)，并且可以通过 `v-bind="$attrs"` 传入内部组件——在创建高级别的组件时非常有用。
 
 ### vm.$listeners
+
+> 2.4.0 新增
 
 - **类型**：`{ [key: string]: Function | Array<Function> }`
 
@@ -1474,6 +1538,9 @@ type: api
   // 函数
   vm.$watch(
     function () {
+      // 表达式 `this.a + this.b` 每次得出一个不同的结果时
+      // 处理函数都会被调用。
+      // 这就像监听一个未被定义的计算属性
       return this.a + this.b
     },
     function (newVal, oldVal) {
@@ -1513,11 +1580,40 @@ type: api
   // 立即以 `a` 的当前值触发回调
   ```
 
-### vm.$set( target, key, value )
+  注意在带有 `immediate` 选项时，你不能在第一次回调时取消侦听给定的 property。
+
+  ``` js
+  // 这会导致报错
+  var unwatch = vm.$watch(
+    'value',
+    function () {
+      doSomething()
+      unwatch()
+    },
+    { immediate: true }
+  )
+  ```
+
+  如果你仍然希望在回调内部调用一个取消侦听的函数，你应该先检查其函数的可用性：
+
+  ``` js
+  var unwatch = vm.$watch(
+    'value',
+    function () {
+      doSomething()
+      if (unwatch) {
+        unwatch()
+      }
+    },
+    { immediate: true }
+  )
+  ```
+
+### vm.$set( target, propertyName/index, value )
 
 - **参数**：
   - `{Object | Array} target`
-  - `{string | number} key`
+  - `{string | number} propertyName/index`
   - `{any} value`
 
 - **返回值**：设置的值。
@@ -1528,11 +1624,11 @@ type: api
 
 - **参考**：[Vue.set](#Vue-set)
 
-### vm.$delete( target, key )
+### vm.$delete( target, propertyName/index )
 
 - **参数**：
   - `{Object | Array} target`
-  - `{string | number} key`
+  - `{string | number} propertyName/index`
 
 - **用法**：
 
@@ -1802,7 +1898,9 @@ type: api
   })
   ```
 
-- **参考**：[Vue.nextTick](#Vue-nextTick)
+- **参考**
+  - [Vue.nextTick](#Vue-nextTick)
+  - [异步更新队列](../guide/reactivity.html#异步更新队列)
 
 ### vm.$destroy()
 
@@ -1934,7 +2032,7 @@ type: api
 
 ### v-for
 
-- **预期**：`Array | Object | number | string`
+- **预期**：`Array | Object | number | string | Iterable (2.6 新增)`
 
 - **用法**：
 
@@ -1951,7 +2049,7 @@ type: api
   ``` html
   <div v-for="(item, index) in items"></div>
   <div v-for="(val, key) in object"></div>
-  <div v-for="(val, key, index) in object"></div>
+  <div v-for="(val, name, index) in object"></div>
   ```
 
   `v-for` 默认行为试着不改变整体，而是替换元素。迫使其重新排序的元素，你需要提供一个 `key` 的特殊属性：
@@ -1961,6 +2059,10 @@ type: api
     {{ item.text }}
   </div>
   ```
+
+  从 2.6 起，`v-for` 也可以在实现了[可迭代协议](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Iteration_protocols#可迭代协议)的值上使用，包括原生的 `Map` 和 `Set`。不过应该注意的是 Vue 2.x 目前并不支持可响应的 `Map` 和 `Set` 值，所以无法自动探测变更。
+
+  <p class="tip">当和 `v-if` 一起使用时，`v-for` 的优先级比 `v-if` 更高。详见[列表渲染教程](../guide/list.html#v-for-with-v-if)</p>
 
   `v-for` 的详细用法可以通过以下链接查看教程详细说明。
 
@@ -2005,11 +2107,17 @@ type: api
   <!-- 方法处理器 -->
   <button v-on:click="doThis"></button>
 
+  <!-- 动态事件 (2.6.0+) -->
+  <button v-on:[event]="doThis"></button>
+
   <!-- 内联语句 -->
   <button v-on:click="doThat('hello', $event)"></button>
 
   <!-- 缩写 -->
   <button @click="doThis"></button>
+
+  <!-- 动态事件缩写 (2.6.0+) -->
+  <button @[event]="doThis"></button>
 
   <!-- 停止冒泡 -->
   <button @click.stop="doThis"></button>
@@ -2050,7 +2158,7 @@ type: api
 
 - **参考**：
   - [事件处理器](../guide/events.html)
-  - [组件 - 自定义事件](../guide/components.html#自定义事件)
+  - [组件 - 自定义事件](../guide/components.html#监听子组件事件)
 
 ### v-bind
 
@@ -2081,8 +2189,14 @@ type: api
   <!-- 绑定一个属性 -->
   <img v-bind:src="imageSrc">
 
+  <!-- 动态特性名 (2.6.0+) -->
+  <button v-bind:[key]="value"></button>
+
   <!-- 缩写 -->
   <img :src="imageSrc">
+
+  <!-- 动态特性名缩写 (2.6.0+) -->
+  <button :[key]="value"></button>
 
   <!-- 内联字符串拼接 -->
   <img :src="'/path/to/images/' + fileName">
@@ -2122,8 +2236,8 @@ type: api
 
 - **参考**：
   - [Class 与 Style 绑定](../guide/class-and-style.html)
-  - [组件 - Props](../guide/components.html#Props)
-  - [组件 - `.sync` 修饰符](../guide/components.html#sync-修饰符)
+  - [组件 - Props](../guide/components.html#通过-Prop-向子组件传递数据)
+  - [组件 - `.sync` 修饰符](../guide/components-custom-events.html#sync-修饰符)
 
 ### v-model
 
@@ -2146,7 +2260,60 @@ type: api
 
 - **参考**：
   - [表单控件绑定](../guide/forms.html)
-  - [组件 - 在输入组件上使用自定义事件](../guide/components.html#使用自定义事件的表单输入组件)
+  - [组件 - 在输入组件上使用自定义事件](../guide/components-custom-events.html#将原生事件绑定到组件)
+
+### v-slot
+
+- **缩写**：`#`
+
+- **预期**：可放置在函数参数位置的 JavaScript 表达式 (在[支持的环境下](../guide/components-slots.html#解构插槽-Props)可使用解构)。可选，即只需要在为插槽传入 prop 的时候使用。
+
+- **参数**：插槽名 (可选，默认值是 `default`)
+
+- **限用于**
+  - `<template>`
+  - [组件](../guide/components-slots.html#独占默认插槽的缩写语法) (对于一个单独的带 prop 的默认插槽)
+
+- **用法**：
+
+  提供具名插槽或需要接收 prop 的插槽。
+
+- **示例**：
+
+  ```html
+  <!-- 具名插槽 -->
+  <base-layout>
+    <template v-slot:header>
+      Header content
+    </template>
+
+    Default slot content
+
+    <template v-slot:footer>
+      Footer content
+    </template>
+  </base-layout>
+
+  <!-- 接收 prop 的具名插槽 -->
+  <infinite-scroll>
+    <template v-slot:item="slotProps">
+      <div class="item">
+        {{ slotProps.item.text }}
+      </div>
+    </template>
+  </infinite-scroll>
+
+  <!-- 接收 prop 的默认插槽，使用了解构 -->
+  <mouse-position v-slot="{ x, y }">
+    Mouse position: {{ x }}, {{ y }}
+  </mouse-position>
+  ```
+
+  更多细节请查阅以下链接。
+
+- **参考**：
+  - [组件 - 插槽](../guide/components-slots.html)
+  - [RFC-0001](https://github.com/vuejs/rfcs/blob/master/active-rfcs/0001-new-slot-syntax.md)
 
 ### v-pre
 
@@ -2212,7 +2379,7 @@ type: api
 
 - **参考**：
   - [数据绑定语法- 插值](../guide/syntax.html#插值)
-  - [组件 - 对低开销的静态组件使用 `v-once`](../guide/components.html#对低开销的静态组件使用-v-once)
+  - [组件 - 对低开销的静态组件使用 `v-once`](../guide/components-edge-cases.html#通过-v-once-创建低开销的静态组件)
 
 ## 特殊特性
 
@@ -2265,45 +2432,13 @@ type: api
 
   关于 ref 注册时间的重要说明：因为 ref 本身是作为渲染结果被创建的，在初始渲染的时候你不能访问它们 - 它们还不存在！`$refs` 也不是响应式的，因此你不应该试图用它在模板中做数据绑定。
 
-- **参考**：[子组件 Refs](../guide/components-edge-cases.html#访问子组件实例或子元素)
-
-### slot
-
-- **预期**：`string`
-
-  用于标记往哪个具名插槽中插入子组件内容。
-
-  详细用法，请参考下面指南部分的链接。
-
-- **参考**：[具名插槽](../guide/components.html#具名插槽)
-
-### slot-scope
-
-> 2.5.0 新增
-
-- **预期**：`function argument expression`
-
-- **用法**：
-
-  用于将元素或组件表示为作用域插槽。特性的值应该是可以出现在函数签名的参数位置的合法的 JavaScript 表达式。这意味着在支持的环境中，你还可以在表达式中使用 ES2015 解构。它在 2.5.0+ 中替代了 [`scope`](#scope-replaced)。
-
-  此属性不支持动态绑定。
-
-- **参考**：[Scoped Slots](../guide/components.html#作用域插槽)
-
-### scope <sup>replaced</sup>
-
-用于表示一个作为带作用域的插槽的 `<template>` 元素，它在 2.5.0+ 中被 [`slot-scope`](#slot-scope) 替代。
-
-- **用法：**
-
-  除了 `scope` 只可以用于 `<template>` 元素，其它和 [`slot-scope`](#slot-scope) 都相同。
+- **参考**：[子组件引用](../guide/components-edge-cases.html#访问子组件实例或子元素)
 
 ### is
 
 - **预期**：`string | Object (组件的选项对象)`
 
-  用于[动态组件](../guide/components.html#动态组件)且基于 [DOM 内模板的限制](../guide/components.html#DOM-模板解析说明)来工作。
+  用于[动态组件](../guide/components.html#动态组件)且基于 [DOM 内模板的限制](../guide/components.html#解析-DOM-模板时的注意事项)来工作。
 
   示例：
 
@@ -2322,7 +2457,41 @@ type: api
 
 - **See also**：
   - [动态组件](../guide/components.html#动态组件)
-  - [DOM 模板解析说明](../guide/components.html#DOM-模板解析说明)
+  - [DOM 模板解析说明](../guide/components.html#解析-DOM-模板时的注意事项)
+
+### slot <sup style="color:#c92222">废弃</sup>
+
+**推荐 2.6.0 新增的 [v-slot](#v-slot)。**
+
+- **预期**：`string`
+
+  用于标记往哪个具名插槽中插入子组件内容。
+
+- **参考**：[具名插槽](../guide/components-slots.html#具名插槽)
+
+### slot-scope <sup style="color:#c92222">废弃</sup>
+
+**推荐 2.6.0 新增的 [v-slot](#v-slot)。**
+
+- **预期**：`function argument expression`
+
+- **用法**：
+
+  用于将元素或组件表示为作用域插槽。特性的值应该是可以出现在函数签名的参数位置的合法的 JavaScript 表达式。这意味着在支持的环境中，你还可以在表达式中使用 ES2015 解构。它在 2.5.0+ 中替代了 [`scope`](#scope-replaced)。
+
+  此属性不支持动态绑定。
+
+- **参考**：[作用域插槽](../guide/components-slots.html#作用域插槽)
+
+### scope <sup style="color:#c92222">移除</sup>
+
+**被 2.5.0 新增的 [slot-scope](#slot-scope) 取代。推荐 2.6.0 新增的 [v-slot](#v-slot)。**
+
+用于表示一个作为带作用域的插槽的 `<template>` 元素，它在 2.5.0+ 中被 [`slot-scope`](#slot-scope) 替代。
+
+- **用法：**
+
+  除了 `scope` 只可以用于 `<template>` 元素，其它和 [`slot-scope`](#slot-scope) 都相同。
 
 ## 内置的组件
 
@@ -2354,6 +2523,7 @@ type: api
   - `css` - boolean，是否使用 CSS 过渡类。默认为 `true`。如果设置为 `false`，将只通过组件事件触发注册的 JavaScript 钩子。
   - `type` - string，指定过渡事件类型，侦听过渡何时结束。有效值为 `"transition"` 和 `"animation"`。默认 Vue.js 将自动检测出持续时间长的为过渡事件类型。
   - `mode` - string，控制离开/进入的过渡时间序列。有效的模式有 `"out-in"` 和 `"in-out"`；默认同时生效。
+  - `duration` - number | { `enter`: number, `leave`: number } 指定过渡的持续时间。默认情况下，Vue 会等待过渡所在根元素的第一个 `transitionend` 或 `animationend` 事件。
   - `enter-class` - string
   - `leave-class` - string
   - `appear-class` - string
@@ -2519,9 +2689,9 @@ type: api
   </keep-alive>
   ```
 
-<p class="tip">`<keep-alive>` 不会在函数式组件中正常工作，因为它们没有缓存实例。</p>
+  <p class="tip">`<keep-alive>` 不会在函数式组件中正常工作，因为它们没有缓存实例。</p>
 
-- **参考**：[动态组件 - keep-alive](../guide/components.html#keep-alive)
+- **参考**：[动态组件 - keep-alive](../guide/components-dynamic-async.html#在动态组件上使用-keep-alive)
 
 ### slot
 
@@ -2534,7 +2704,7 @@ type: api
 
   详细用法，请参考下面教程的链接。
 
-- **参考**：[使用插槽分发内容](../guide/components.html#使用插槽分发内容)
+- **参考**：[通过插槽分发内容](../guide/components.html#通过插槽分发内容)
 
 ## VNode 接口
 

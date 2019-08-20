@@ -10,9 +10,9 @@ order: 105
 
 我们之前曾经在一个多标签的界面中使用 `is` 特性来切换不同的组件：
 
-```html
+{% codeblock lang:html %}
 <component v-bind:is="currentTabComponent"></component>
-```
+{% endcodeblock %}
 
 当在这些组件之间切换的时候，你有时会想保持这些组件的状态，以避免反复重渲染导致的性能问题。例如我们来展开说一说这个多标签界面：
 
@@ -201,6 +201,8 @@ new Vue({
 
 ## 异步组件
 
+<div class="vueschool"><a href="https://vueschool.io/lessons/dynamically-load-components?friend=vuejs" target="_blank" rel="noopener" title="Free Vue.js Async Components lesson">Watch a free video lesson on Vue School</a></div>
+
 在大型应用中，我们可能需要将应用分割成小一些的代码块，并且只在需要的时候才从服务器加载一个模块。为了简化，Vue 允许你以一个工厂函数的方式定义你的组件，这个工厂函数会异步解析你的组件定义。Vue 只有在这个组件需要被渲染的时候才会触发该工厂函数，且会把结果缓存起来供未来重渲染。例如：
 
 ``` js
@@ -235,7 +237,7 @@ Vue.component(
 )
 ```
 
-当使用[局部注册](components.html#本地注册)的时候，你也可以直接提供一个返回 `Promise` 的函数：
+当使用[局部注册](components-registration.html#局部注册)的时候，你也可以直接提供一个返回 `Promise` 的函数：
 
 ``` js
 new Vue({
@@ -246,7 +248,7 @@ new Vue({
 })
 ```
 
-<p class="tip">如果你是一个 <strong>Browserify</strong> 用户同时喜欢使用异步组件，很不幸这个工具的作者[明确表示](https://github.com/substack/node-browserify/issues/58#issuecomment-21978224)异步加载“并不会被 Browserify 支持”，至少官方不会。Browserify 社区已经找到了[一些变通方案](https://github.com/vuejs/vuejs.org/issues/620)，这些方案可能会对已存在的复杂应用有帮助。对于其它的场景，我们推荐直接使用 webpack，以拥有内建的被作为第一公民的异步支持。</p> 
+<p class="tip">如果你是一个 <strong>Browserify</strong> 用户同时喜欢使用异步组件，很不幸这个工具的作者[明确表示](https://github.com/substack/node-browserify/issues/58#issuecomment-21978224)异步加载“并不会被 Browserify 支持”，至少官方不会。Browserify 社区已经找到了[一些变通方案](https://github.com/vuejs/vuejs.org/issues/620)，这些方案可能会对已存在的复杂应用有帮助。对于其它的场景，我们推荐直接使用 webpack，以拥有内置的头等异步支持。</p> 
 
 ### 处理加载状态
 
